@@ -350,9 +350,6 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      const apiKey = ""; 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-
       const chatHistory = newMessages.map(msg => ({
         role: msg.role === 'model' ? 'model' : 'user',
         parts: [{ text: msg.text }]
@@ -363,7 +360,7 @@ export default function App() {
         systemInstruction: { parts: [{ text: systemPrompt }] }
       };
 
-      const response = await fetch(apiUrl, {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
