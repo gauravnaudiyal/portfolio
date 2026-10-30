@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, X, Feather } from 'lucide-react';
+import { Send, X } from 'lucide-react';
 
 // --- RESUME DATA ---
 const resumeData = {
@@ -101,7 +101,7 @@ GITHUB: https://github.com/gauravnaudiyal
 `;
 
 // --- CYBERSIGILISM SVGS ---
-const SigilCorner = ({ className }) => (
+const SigilCorner = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="0.5" className={className}>
     <path d="M0,0 L25,35 L10,60 L45,45 L75,15 L95,65 L100,100" strokeWidth="0.2" className="opacity-40" />
     <path d="M10,10 L18,50 L40,28 L55,85 L85,35 L95,95" strokeWidth="0.8" />
@@ -115,7 +115,7 @@ const SigilCorner = ({ className }) => (
   </svg>
 );
 
-const SigilDivider = ({ className }) => (
+const SigilDivider = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 200 40" fill="none" stroke="currentColor" strokeWidth="0.5" className={className}>
     <path d="M0,20 L75,20 L95,2 L105,38 L125,20 L200,20" strokeWidth="0.8" />
     <path d="M65,20 L85,10 L95,20 L85,30 Z" strokeWidth="0.3" className="opacity-50" />
@@ -126,7 +126,7 @@ const SigilDivider = ({ className }) => (
   </svg>
 );
 
-const CybersigilRune = ({ className }) => (
+const CybersigilRune = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 50 50" fill="none" stroke="currentColor" strokeWidth="1" className={className}>
     <path d="M25,5 L25,45 M5,25 L45,25" strokeWidth="0.5" className="opacity-40" />
     <path d="M10,10 L25,5 L40,10 L45,25 L40,40 L25,45 L10,40 L5,25 Z" strokeWidth="0.5" />
@@ -144,15 +144,15 @@ const Scribble = () => (
 
 // --- UNREAL ANIMATION COMPONENTS ---
 
-const CustomCursor = ({ isInverted }) => {
-  const cursorRef = useRef(null);
-  const dotRef = useRef(null);
-  const requestRef = useRef(null);
+const CustomCursor = ({ isInverted }: { isInverted: boolean }) => {
+  const cursorRef = useRef<HTMLDivElement | null>(null);
+  const dotRef = useRef<HTMLDivElement | null>(null);
+  const requestRef = useRef<number | null>(null);
   const mouse = useRef({ x: 0, y: 0 });
   const current = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    const onMouseMove = (e) => {
+    const onMouseMove = (e: MouseEvent) => {
       mouse.current = { x: e.clientX, y: e.clientY };
       if (dotRef.current) {
         dotRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
@@ -161,7 +161,6 @@ const CustomCursor = ({ isInverted }) => {
     window.addEventListener('mousemove', onMouseMove);
 
     const render = () => {
-      // Lerp for smooth spring effect
       current.current.x += (mouse.current.x - current.current.x) * 0.15;
       current.current.y += (mouse.current.y - current.current.y) * 0.15;
       if (cursorRef.current) {
@@ -173,7 +172,9 @@ const CustomCursor = ({ isInverted }) => {
 
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
-      cancelAnimationFrame(requestRef.current);
+      if (requestRef.current !== null) {
+        cancelAnimationFrame(requestRef.current);
+      }
     };
   }, []);
 
@@ -185,51 +186,55 @@ const CustomCursor = ({ isInverted }) => {
   );
 };
 
-const Magnetic = ({ children }) => {
-  const ref = useRef(null);
-  
+const Magnetic = ({ children }: { children: React.ReactNode }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    
-    const xTo = (val) => el.style.setProperty('--tx', `${val}px`);
-    const yTo = (val) => el.style.setProperty('--ty', `${val}px`);
 
-    const mouseMove = (e) => {
+    const xTo = (val: number) => el.style.setProperty('--tx', `${val}px`);
+    const yTo = (val: number) => el.style.setProperty('--ty', `${val}px`);
+
+    const mouseMove = (e: MouseEvent) => {
       const { clientX, clientY } = e;
       const { height, width, left, top } = el.getBoundingClientRect();
       const x = clientX - (left + width / 2);
       const y = clientY - (top + height / 2);
-      xTo(x * 0.4); // Magnetic pull strength
+      xTo(x * 0.4);
       yTo(y * 0.4);
     };
-    
+
     const mouseLeave = () => {
       xTo(0);
       yTo(0);
     };
-    
+
     el.addEventListener('mousemove', mouseMove);
     el.addEventListener('mouseleave', mouseLeave);
-    
+
     return () => {
       el.removeEventListener('mousemove', mouseMove);
       el.removeEventListener('mouseleave', mouseLeave);
     };
   }, []);
 
-  return React.cloneElement(children, {
-    ref,
-    style: { 
-      transform: 'translate3d(var(--tx, 0), var(--ty, 0), 0)', 
-      transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)' 
-    }
-  });
+  return (
+    <div
+      ref={ref}
+      style={{
+        transform: 'translate3d(var(--tx, 0px), var(--ty, 0px), 0)',
+        transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+      }}
+    >
+      {children}
+    </div>
+  );
 };
 
-const SplitText = ({ text, className = "" }) => {
-  const ref = useRef(null);
-  
+const SplitText = ({ text, className = "" }: { text: string; className?: string }) => {
+  const ref = useRef<HTMLSpanElement | null>(null);
+
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
@@ -253,9 +258,9 @@ const SplitText = ({ text, className = "" }) => {
   );
 };
 
-const FadeUp = ({ children, delay = 0, className = "" }) => {
-  const ref = useRef(null);
-  
+const FadeUp = ({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
@@ -273,9 +278,9 @@ const FadeUp = ({ children, delay = 0, className = "" }) => {
   );
 };
 
-const Parallax = ({ children, speed = 0.5, className = "" }) => {
-  const ref = useRef(null);
-  
+const Parallax = ({ children, speed = 0.5, className = "" }: { children?: React.ReactNode; speed?: number; className?: string }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     const handleScroll = () => {
       if (ref.current) {
@@ -286,27 +291,30 @@ const Parallax = ({ children, speed = 0.5, className = "" }) => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [speed]);
-  
+
   return <div ref={ref} className={`will-change-transform ${className}`}>{children}</div>;
 };
 
+interface ChatMessage {
+  role: 'model' | 'user';
+  text: string;
+}
+
 export default function App() {
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'model', text: "Hey! I'm Gaurav's AI assistant. Ask me anything about his projects, skills, or experience!" }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
-  
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
   const [isInverted, setIsInverted] = useState(false);
-  const experienceRef = useRef(null);
+  const experienceRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    // Lock scroll during CSS preloading phase
     document.body.style.overflow = 'hidden';
-    
-    // Unlock scroll after the 3.5s CSS animation finishes
+
     const timer = setTimeout(() => {
       document.body.style.overflow = '';
     }, 3500);
@@ -327,33 +335,34 @@ export default function App() {
     const handleScroll = () => {
       if (experienceRef.current) {
         const rect = experienceRef.current.getBoundingClientRect();
-        // Trigger the inversion when the top of the Experience section is past 60% of the screen height
         setIsInverted(rect.top < window.innerHeight * 0.6);
       }
     };
-    
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    // Run once on mount to catch initial scroll position
     handleScroll();
-    
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleSend = async (e) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMsg = { role: 'user', text: input.trim() };
+    const userMsg: ChatMessage = { role: 'user', text: input.trim() };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput('');
     setIsLoading(true);
 
     try {
-      const chatHistory = newMessages.map(msg => ({
-        role: msg.role === 'model' ? 'model' : 'user',
-        parts: [{ text: msg.text }]
-      }));
+      // Skip initial model greeting so contents[0] is always 'user'
+      const chatHistory = newMessages
+        .filter((msg, index) => !(index === 0 && msg.role === 'model'))
+        .map(msg => ({
+          role: msg.role === 'model' ? 'model' : 'user',
+          parts: [{ text: msg.text }]
+        }));
 
       const payload = {
         contents: chatHistory,
@@ -375,7 +384,7 @@ export default function App() {
       } else {
         throw new Error("EMPTY_RES");
       }
-    } catch (err) {
+    } catch {
       setMessages(prev => [...prev, { role: 'model', text: "Oops, connection failed. Try again!" }]);
     } finally {
       setIsLoading(false);
@@ -434,14 +443,17 @@ export default function App() {
           font-size: 80px;
           color: #1a1a1a;
           white-space: nowrap;
-          animation: preloaderMove 3s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+          animation: preloaderMoveMobile 3s cubic-bezier(0.76, 0, 0.24, 1) forwards;
         }
 
         @media (min-width: 768px) {
-          .preloader-text { font-size: 130px; }
+          .preloader-text {
+            font-size: 130px;
+            animation: preloaderMoveDesktop 3s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+          }
         }
 
-        @keyframes preloaderMove {
+        @keyframes preloaderMoveMobile {
           0% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.5); clip-path: polygon(0 0, 0 0, 0 100%, 0% 100%); }
           40% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.5); clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
           50% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.5); clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
@@ -453,17 +465,15 @@ export default function App() {
           }
         }
         
-        @media (min-width: 768px) {
-          @keyframes preloaderMove {
-            0% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.5); clip-path: polygon(0 0, 0 0, 0 100%, 0% 100%); }
-            40% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.5); clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
-            50% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.5); clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
-            100% { 
-              top: 128px; 
-              left: max(72px, calc((100vw - 896px) / 2 + 72px)); 
-              transform: translate(0, 0) scale(1); 
-              clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); 
-            }
+        @keyframes preloaderMoveDesktop {
+          0% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.5); clip-path: polygon(0 0, 0 0, 0 100%, 0% 100%); }
+          40% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.5); clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+          50% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.5); clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+          100% { 
+            top: 128px; 
+            left: max(72px, calc((100vw - 896px) / 2 + 72px)); 
+            transform: translate(0, 0) scale(1); 
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); 
           }
         }
 
@@ -706,7 +716,7 @@ export default function App() {
         {/* AI CHATBOT (Summoning Circle / Notes aesthetic) */}
         <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end">
           {isChatOpen && (
-            <div className="mb-6 w-[90vw] sm:w-[420px] h-[550px] drawn-box-alt bg-[#F4F1EA] shadow-2xl flex flex-col origin-bottom-right animate-in fade-in zoom-in-95 duration-300">
+            <div className="mb-6 w-[90vw] sm:w-[420px] h-[550px] drawn-box-alt bg-[#F4F1EA] shadow-2xl flex flex-col origin-bottom-right transition-all duration-300">
               
               {/* Chat Header */}
               <div className="border-b border-[#1a1a1a] border-dashed p-5 flex justify-between items-center relative overflow-hidden">
